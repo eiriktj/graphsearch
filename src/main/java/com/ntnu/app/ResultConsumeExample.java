@@ -55,7 +55,12 @@ public class ResultConsumeExample extends BaseApplication
     private static List<String> matchPersonNodes( Transaction tx )
     {
         List<String> names = new ArrayList<>();
-        StatementResult result = tx.run( "MATCH (a:Person) RETURN a.name ORDER BY a.name" );
+        StatementResult result = tx.run
+        (    
+            "CALL db.index.fulltext.queryNodes(\"work\", \"markens grøde\") " +
+            "YIELD node as work " +
+            "RETURN work.expressiontitles"
+        );
         while ( result.hasNext() )
         {
             names.add( result.next().get( 0 ).asString() );
