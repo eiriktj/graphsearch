@@ -1,4 +1,4 @@
-package com.ntnu.app;
+package gs;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
