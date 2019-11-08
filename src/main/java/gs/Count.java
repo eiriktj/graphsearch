@@ -1,10 +1,10 @@
 package gs;
 
-import gs.NodeLife;
-
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.List;
 
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Relationship;
@@ -23,12 +23,12 @@ public class Count
     {
         Iterable<Relationship> wrels = node.getRelationships(RelTypes.REALIZES);
 
-        long counter = 0;
+        long count = 0;
         for (Relationship i : wrels) 
         {
-            counter++;
+            count++;
         }
-        return counter;
+        return count;
     }
 
     @UserFunction(value = "gs.mcount")
@@ -38,16 +38,16 @@ public class Count
     {
         Iterable<Relationship> wrels = node.getRelationships(RelTypes.REALIZES);
 
-        long counter = 0;
+        long count = 0;
         for (Relationship rel : wrels)
         {
             Iterable<Relationship> erels = rel.getOtherNode(node).getRelationships(RelTypes.EMBODIES);
             for (Relationship i : erels) 
             {
-                counter++;
+                count++;
             }
         }
-        return counter;
+        return count;
     }
 
     @UserFunction(value = "gs.wmcount")
@@ -56,68 +56,71 @@ public class Count
             @Name("node") Node node,
             @Name("string") String string)
     {
-        ArrayList<NodeLife> currentIteration = new ArrayList<NodeLife>;
-        ArrayList<long> nodeIdList = new ArrayList<long>;
-        String [] swords = string.split(" ")
-
-        currentIteration.add(node,2,swords);
-        nodeIdList.add(node.getId());
-        while(currentIteration.size() > 0)
+        ArrayList<Node> searchList = new ArrayList<Node>();
+        ArrayList<Long> idList = new ArrayList<Long>();
+        ArrayList<Node> currentIteration = new ArrayList<Node>();
+        String [] swords = string.split(" ");
+        long nodeCount = 0;
+        currentIteration.add(node);
+        idList.add(node.getId());
+        while(!currentIteration.isEmpty())
         {
-            ArrayList<NodeLife> NextIteration = new ArrayList<NodeLife>;
-            for(NodeLife nl : currentIteration)
+            searchList.addAll(currentIteration);
+            ArrayList<Node> nextIteration = new ArrayList<Node>();
+            for(Node n : currentIteration)
             {
-                Iterable<Relationship> rels = nl.node.getRelationships();
-                for(Relationship rel : rels):
+                ArrayList<Relationship> rels = new ArrayList<Relationship>();
+                n.getRelationships(RelTypes.CONTRIBUTOR_OF, Direction.INCOMING).forEach(rels::add);
+                n.getRelationships(RelTypes.DERIVATION_OF, Direction.INCOMING).forEach(rels::add);
+                n.getRelationships(RelTypes.REALIZES, Direction.INCOMING).forEach(rels::add);
+                n.getRelationships(RelTypes.EMBODIES, Direction.INCOMING).forEach(rels::add);
+                for(Relationship rel : rels)
                 {
-                    Node nnode = rel.getOtherNode(nl.node);
-                    String words = "";
-                    long life = nl.life;
-
-                    if(nnode.hasLabel(Labels.PERSON))
+                    if(!idList.contains(rel.getOtherNode(n)))
                     {
-                        words = nnode.getProperty("name").split(" ");
-                    }
-                    else
-                    {
-                        words = nnode.getProperty("title").split(" ");
-                    }
-
-                    if(!nodeIdList.contains(nnode.getId()))
-                    {
-                        nodeIdList.add(nnode.getId());
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                    if(!Collections.disjoint(swords,words))
-                    {
-                        life = 2;
-                    }
-                    else 
-                    {
-                        life--;
-                    }
-                    if(life > 0)
-                    {
-                        NextIteration.add(nnode,life,words)
+                        nextIteration.add(rel.getOtherNode(n));
+                        idList.add(n.getId());
                     }
                 }
             }
+            currentIteration = nextIteration;
         }
+
+        for(Node n : searchList)
+        {
+            String [] words;
+            String property;
+            long count = 0;
+            if(n.hasLabel(Label.label("Person")))
+            {
+                property = "name";
+            }
+            else
+            {
+                property = "title";
+            }
+            words = n.getProperty(property).toString().toLowerCase().replaceAll(" [^a-z\\s]","").split(" ");
+            for(String s : swords)
+            {
+                if(Arrays.asList(words).contains(s))
+                {
+                    count++;
+                }
+            }
+            if(count > 0)
+            {
+                nodeCount++;
+            }
+        }
+
+        return nodeCount;
     }
 
     private enum RelTypes implements RelationshipType
     {
-        REALIZES,
-        EMBODIES,
+        CONTRIBUTOR_OF,
         DERIVATION_OF,
-        CONTRIBUTOR_OF
-    }
-
-    private enum Labels implements Label
-    {
-        PERSON
+        EMBODIES,
+        REALIZES
     }
 }
