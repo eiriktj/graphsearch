@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.neo4j.graphalgo.GraphAlgoFactory;
+import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.procedure.Description;
@@ -51,11 +55,41 @@ public class Count
     }
 
     @UserFunction(value = "gs.wmcount")
-    @Description("Count number of nodes with properties that match search string.")
+    @Description("Count number of nodes with properties that match the search string.")
     public long wmcount(
             @Name("node") Node node,
             @Name("string") String string)
     {
+            return (long) propertyStringMatch(node, string).size();
+    }
+
+    @UserFunction(value = "gs.wmdiameter")
+    @Description("Find the graph diameter of the nodes with properties that match the search string.")
+    public long wmdiameter(
+            @Name("node") Node node,
+            @Name("string") String string)
+    {
+        ArrayList<Node> matchList = new ArrayList<Node>();
+        matchList = propertyStringMatch(node, string);
+        PathFinder<Path> finder = GraphAlgoFactory.shortestPath( PathExpanders.allTypesAndDirections(), 99);
+        long diameter = 0;
+        for (int i = 0; i < matchList.size()-1; i++)
+        {
+            for (int j = i+1; j < matchList.size(); j++)
+            {
+                Path path = finder.findSinglePath(matchList.get(i), matchList.get(j));
+                if( path.length() > diameter)
+                {
+                    diameter = (long) path.length();
+                }
+            }
+        }
+        return diameter;
+    }
+
+    private ArrayList<Node> propertyStringMatch(Node node, String string)
+    {
+        ArrayList<Node> matchList = new ArrayList<Node>();
         ArrayList<Node> searchList = new ArrayList<Node>();
         ArrayList<Long> idList = new ArrayList<Long>();
         ArrayList<Node> currentIteration = new ArrayList<Node>();
@@ -109,11 +143,11 @@ public class Count
             }
             if(count > 0)
             {
-                nodeCount++;
+                matchList.add(n);
             }
         }
 
-        return nodeCount;
+        return matchList;
     }
 
     private enum RelTypes implements RelationshipType
