@@ -1,0 +1,5 @@
+{
+  "statements" : [ {
+    "statement" : "MATCH (p:Person) RETURN p.name"
+  } ]
+}
