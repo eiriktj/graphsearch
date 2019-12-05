@@ -1,5 +1,15 @@
 {
   "statements" : [ {
-    "statement" : "MATCH (p:Person) RETURN p.name"
+    "statement" : "CALL db.index.fulltext.queryNodes('work', 'darkness') YIELD node as work, score RETURN work.label, score, work.pagerank, sqrt(work.pagerank * score) as calc ORDER BY calc descending"
+  } , {
+    "statement" : "CALL db.index.fulltext.queryNodes('work', 'darkness visible') YIELD node as work, score RETURN work.label, score, work.pagerank, sqrt(work.pagerank * score) as calc ORDER BY calc descending"
+  } , {
+    "statement" : "CALL db.index.fulltext.queryNodes('work', 'darkness golding') YIELD node as work, score RETURN work.label, score, work.pagerank, sqrt(work.pagerank * score) as calc ORDER BY calc descending"
+  } , {
+    "statement" : "CALL db.index.fulltext.queryNodes('work', 'darkness visible william golding') YIELD node as work, score RETURN work.label, score, work.pagerank, sqrt(work.pagerank * score) as calc ORDER BY calc descending"
+  } , {
+    "statement" : "CALL db.index.fulltext.queryNodes('work', 'darkness golding novel') YIELD node as work, score RETURN work.label, score, work.pagerank, sqrt(work.pagerank * score) as calc ORDER BY calc descending"
+  } , {
+    "statement" : "CALL db.index.fulltext.queryNodes('work', 'darkness visible william golding novel') YIELD node as work, score RETURN work.label, score, work.pagerank, sqrt(work.pagerank * score) as calc ORDER BY calc descending"
   } ]
 }
