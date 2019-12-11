@@ -19,7 +19,7 @@ for string in search_strings:
     data['statements'].append({'statement': formatted_string})
 
 url = 'url:7474/db/data/transaction/commit'
-r = requests.post(url, auth=('user', 'password'), json=data)
+r = requests.post(url, auth=('username', 'password'), json=data)
 
 with open('results.json', 'w') as f:
     f.write(r.text)
@@ -28,7 +28,7 @@ results = r.json()['results']
 
 columns = results[0]['columns']
 
-doc = Document()
+doc = Document(fontenc=None,inputenc=None)
 
 with doc.create(Section('Tables')):
     for i in range(len(search_strings)):
@@ -41,4 +41,4 @@ with doc.create(Section('Tables')):
                     table.add_hline()
                     table.add_row((*row['row']))
                 table.add_hline()
-doc.generate_pdf('tables')
+doc.generate_pdf('tables', compiler='lualatex')
