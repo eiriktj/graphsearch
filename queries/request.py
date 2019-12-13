@@ -1,4 +1,4 @@
-from pylatex import Document, Section, Subsection, Tabular
+from pylatex import Document, Section, Subsection, LongTable
 
 import requests
 
@@ -28,12 +28,13 @@ results = r.json()['results']
 
 columns = results[0]['columns']
 
-doc = Document(fontenc=None,inputenc=None)
+#doc = Document(fontenc=None,inputenc=None)
+doc = Document()
 
 with doc.create(Section('Tables')):
     for i in range(len(search_strings)):
         with doc.create(Subsection(search_strings[i])):
-            with doc.create(Tabular('|'+'l|'*len(columns))) as table:
+            with doc.create(LongTable('|'+'p{5cm}|'+'p{3cm}|'*(len(columns)-1))) as table:
                 table.add_hline()
                 table.add_row((*columns))
                 rows = results[i]['data']
